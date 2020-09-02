@@ -34,7 +34,7 @@ func main() {
 		panic(err)
 	}
 
-	// read and parse wave file
+	// get format info
 	var format wav.Format
 	r.GetFormat(&format)
 
@@ -45,6 +45,7 @@ func main() {
 	fmt.Println("BlockAlign     : ", format.BlockAlign)
 	fmt.Println("BitsPerSample  : ", format.BitsPerSample)
 
+	// get sample data
 	samples, err := r.GetSamples(2)
 
 	for _, sample := range samples {
