@@ -1,4 +1,8 @@
-# wavgo
+<p align='center'>
+    <img src='./logo.jpg' width='130px' height='125px'/>
+</p>
+
+
 Wave file reader/writer for Go.
 
 
