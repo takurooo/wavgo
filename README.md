@@ -1,5 +1,5 @@
 # wavgo
-Wave file read/write library for Go.
+Wave file reader/writeer for Go.
 
 
 # godoc
