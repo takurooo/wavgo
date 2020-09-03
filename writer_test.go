@@ -35,5 +35,8 @@ func TestWriter(t *testing.T) {
 		}
 	}
 
-	w.WriteSamples(samples)
+	err = w.WriteSamples(samples)
+	if err != nil {
+		t.Fatal(err)
+	}
 }

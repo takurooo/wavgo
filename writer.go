@@ -68,6 +68,9 @@ func (w *Writer) writeHeader() {
 func (w *Writer) WriteSamples(samples []Sample) error {
 	if !w.headerWritten {
 		w.writeHeader()
+		if w.bw.Err() != nil {
+			return w.bw.Err()
+		}
 	}
 
 	numChannels := int(w.format.NumChannels)
