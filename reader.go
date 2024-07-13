@@ -39,11 +39,10 @@ func (r *Reader) Close() {
 
 // ReadOnMemory ...
 func (r *Reader) ReadOnMemory() error {
-	riffReader := riff.NewReader(r.f)
 	// ----------------------------
 	// RIFF Chunk
 	// ----------------------------
-	riffChunk, err := riffReader.Read()
+	riffChunk, err := riff.ReadRIFFChunk(r.f)
 	if err != nil {
 		return nil
 	}
@@ -51,7 +50,7 @@ func (r *Reader) ReadOnMemory() error {
 	// ----------------------------
 	// Format Chunk
 	// ----------------------------
-	fmtChunk := riffReader.GetChunk(riffChunk, riff.FMT)
+	fmtChunk := riffChunk.GetFMTChunk()
 	if fmtChunk == nil {
 		return errors.New("not found FmtChunk")
 	}
@@ -71,7 +70,7 @@ func (r *Reader) ReadOnMemory() error {
 	// ----------------------------
 	// Data Chunk
 	// ----------------------------
-	dataChunk := riffReader.GetChunk(riffChunk, riff.DATA)
+	dataChunk := riffChunk.GetDataChunk()
 	if dataChunk == nil {
 		return errors.New("not found DataChunk")
 	}
