@@ -1,5 +1,7 @@
 package riff
 
+import "errors"
+
 const (
 	RIFF string = "RIFF"
 	FMT  string = "fmt "
@@ -25,24 +27,20 @@ func (r *riffChunk) AddSubChunk(id string, size uint32, data []byte) {
 	r.SubChunks = append(r.SubChunks, &Chunk{id, size, data})
 }
 
-func (r *riffChunk) GetFMTChunk() (chunk *Chunk) {
-	chunk = nil
+func (r *riffChunk) GetFMTChunk() (*Chunk, error) {
 	for _, c := range r.SubChunks {
 		if c.ID == FMT {
-			chunk = c
-			break
+			return c, nil
 		}
 	}
-	return chunk
+	return nil, errors.New("not found FMTChunk")
 }
 
-func (r *riffChunk) GetDataChunk() (chunk *Chunk) {
-	chunk = nil
+func (r *riffChunk) GetDataChunk() (*Chunk, error) {
 	for _, c := range r.SubChunks {
 		if c.ID == DATA {
-			chunk = c
-			break
+			return c, nil
 		}
 	}
-	return chunk
+	return nil, errors.New("not found DataChunk")
 }

@@ -44,18 +44,18 @@ func (r *Reader) ReadOnMemory() error {
 	// ----------------------------
 	riffChunk, err := riff.ReadRIFFChunk(r.f)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// ----------------------------
 	// Format Chunk
 	// ----------------------------
-	fmtChunk := riffChunk.GetFMTChunk()
-	if fmtChunk == nil {
-		return errors.New("not found FmtChunk")
+	fmtChunk, err := riffChunk.GetFMTChunk()
+	if err != nil {
+		return err
 	}
 
-	r.format, err = readFormat(fmtChunk)
+	r.format, err = parseFormatChunkData(fmtChunk)
 	if err != nil {
 		return err
 	}
@@ -70,9 +70,9 @@ func (r *Reader) ReadOnMemory() error {
 	// ----------------------------
 	// Data Chunk
 	// ----------------------------
-	dataChunk := riffChunk.GetDataChunk()
-	if dataChunk == nil {
-		return errors.New("not found DataChunk")
+	dataChunk, err := riffChunk.GetDataChunk()
+	if err != nil {
+		return err
 	}
 	r.numSamples = dataChunk.Size / uint32(r.format.BlockAlign)
 
@@ -92,10 +92,8 @@ func (r *Reader) GetNumSamples() uint32 {
 }
 
 // GetSamples ...
-func (r *Reader) GetSamples(numSamples int) (samples []Sample, err error) {
-
-	samples = make([]Sample, numSamples)
-
+func (r *Reader) GetSamples(numSamples int) ([]Sample, error) {
+	samples := make([]Sample, numSamples)
 	bitsPerSample := int(r.format.BitsPerSample)
 	numChannels := int(r.format.NumChannels)
 
@@ -125,15 +123,16 @@ func (r *Reader) GetSamples(numSamples int) (samples []Sample, err error) {
 	return samples, nil
 }
 
-func readFormat(fmtChunk *riff.Chunk) (format *Format, err error) {
-	format = &Format{}
+func parseFormatChunkData(fmtChunk *riff.Chunk) (*Format, error) {
 	br := bio.NewReader(bytes.NewReader(fmtChunk.Data))
-	format.AudioFormat = br.ReadU16(bio.LittleEndian)
-	format.NumChannels = br.ReadU16(bio.LittleEndian)
-	format.SampleRate = br.ReadU32(bio.LittleEndian)
-	format.ByteRate = br.ReadU32(bio.LittleEndian)
-	format.BlockAlign = br.ReadU16(bio.LittleEndian)
-	format.BitsPerSample = br.ReadU16(bio.LittleEndian)
+	format := &Format{
+		AudioFormat:   br.ReadU16(bio.LittleEndian),
+		NumChannels:   br.ReadU16(bio.LittleEndian),
+		SampleRate:    br.ReadU32(bio.LittleEndian),
+		ByteRate:      br.ReadU32(bio.LittleEndian),
+		BlockAlign:    br.ReadU16(bio.LittleEndian),
+		BitsPerSample: br.ReadU16(bio.LittleEndian),
+	}
 	if br.Err() != nil {
 		return nil, br.Err()
 	}
