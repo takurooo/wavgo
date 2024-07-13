@@ -25,8 +25,7 @@ func (r *Reader) Read() (riffChunk *RIFFChunk, err error) {
 	// ----------------------------
 	chunkID := r.br.ReadS32(bio.BigEndian)
 	if chunkID != "RIFF" {
-		err = errors.New("Invalid chunkID")
-		return nil, err
+		return nil, errors.New("not found riff chunk")
 	}
 	chunkSize := r.br.ReadU32(bio.LittleEndian)
 	format := r.br.ReadS32(bio.BigEndian)
