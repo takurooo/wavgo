@@ -1,4 +1,4 @@
-package wav
+package wavgo
 
 import (
 	"bytes"

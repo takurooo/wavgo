@@ -1,4 +1,4 @@
-package wav
+package wavgo
 
 // AudioFormatPCM ...
 const (
