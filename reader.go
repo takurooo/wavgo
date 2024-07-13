@@ -44,6 +44,9 @@ func (r *Reader) ReadOnMemory() error {
 	// RIFF Chunk
 	// ----------------------------
 	riffChunk, err := riffReader.Read()
+	if err != nil {
+		return nil
+	}
 
 	// ----------------------------
 	// Format Chunk
