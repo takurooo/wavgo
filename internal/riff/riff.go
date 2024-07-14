@@ -3,9 +3,9 @@ package riff
 import "errors"
 
 const (
-	RIFF string = "RIFF"
-	FMT  string = "fmt "
-	DATA string = "data"
+	RIFFChunkID string = "RIFF"
+	FMTChunkID  string = "fmt "
+	DATAChunkID string = "data"
 )
 
 // Chunk ...
@@ -29,7 +29,7 @@ func (r *riffChunk) AddSubChunk(id string, size uint32, data []byte) {
 
 func (r *riffChunk) GetFMTChunk() (*Chunk, error) {
 	for _, c := range r.SubChunks {
-		if c.ID == FMT {
+		if c.ID == FMTChunkID {
 			return c, nil
 		}
 	}
@@ -38,7 +38,7 @@ func (r *riffChunk) GetFMTChunk() (*Chunk, error) {
 
 func (r *riffChunk) GetDataChunk() (*Chunk, error) {
 	for _, c := range r.SubChunks {
-		if c.ID == DATA {
+		if c.ID == DATAChunkID {
 			return c, nil
 		}
 	}

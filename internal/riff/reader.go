@@ -20,7 +20,7 @@ func ReadRIFFChunk(r io.ReaderAt) (*riffChunk, error) {
 	if breader.Err() != nil {
 		return nil, breader.Err()
 	}
-	if chunkID != RIFF {
+	if chunkID != RIFFChunkID {
 		return nil, errors.New("not found riff chunk")
 	}
 	riffChunk := &riffChunk{chunkID, chunkSize, format, make([]*Chunk, 0)}

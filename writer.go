@@ -51,7 +51,7 @@ func (w *Writer) writeHeader() {
 	w.bw.WriteU32(0, binaryio.LittleEndian) // dummy write offset 4
 	w.bw.WriteS32("WAVE", binaryio.BigEndian)
 	// fmt chunk
-	w.bw.WriteS32(riff.FMT, binaryio.BigEndian)
+	w.bw.WriteS32(riff.FMTChunkID, binaryio.BigEndian)
 	w.bw.WriteU32(0x10, binaryio.LittleEndian)
 	w.bw.WriteU16(w.format.AudioFormat, binaryio.LittleEndian)
 	w.bw.WriteU16(w.format.NumChannels, binaryio.LittleEndian)
@@ -60,7 +60,7 @@ func (w *Writer) writeHeader() {
 	w.bw.WriteU16(w.format.BlockAlign, binaryio.LittleEndian)
 	w.bw.WriteU16(w.format.BitsPerSample, binaryio.LittleEndian)
 	// data chunk
-	w.bw.WriteS32(riff.DATA, binaryio.BigEndian)
+	w.bw.WriteS32(riff.DATAChunkID, binaryio.BigEndian)
 	w.bw.WriteU32(0, binaryio.LittleEndian) // dummy write offset 40
 }
 
