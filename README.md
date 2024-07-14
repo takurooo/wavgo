@@ -1,16 +1,20 @@
+# wavgo
+
+[![codecov](https://codecov.io/gh/takurooo/wavgo/graph/badge.svg?token=63MH3X9PC4)](https://codecov.io/gh/takurooo/wavgo)
+
 <p align='center'>
     <img src='./logo.jpg' width='130px' height='125px'/>
 </p>
 
 Wave file reader/writer for Go.
 
-# godoc
+## godoc
 
 https://godoc.org/github.com/takurooo/wavgo
 
-# Examples
+## Examples
 
-## Reader
+### Reader
 
 ```go
 package main
@@ -55,7 +59,7 @@ func main() {
 }
 ```
 
-## Writer
+### Writer
 
 ```go
 package main
