@@ -6,7 +6,7 @@ import (
 	"os"
 
 	bio "github.com/takurooo/binaryio"
-	"github.com/takurooo/wavgo/riff"
+	"github.com/takurooo/wavgo/internal/riff"
 )
 
 // Reader ...
@@ -46,7 +46,6 @@ func (r *Reader) ReadOnMemory() error {
 	if err != nil {
 		return err
 	}
-
 	// ----------------------------
 	// Format Chunk
 	// ----------------------------

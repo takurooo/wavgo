@@ -5,7 +5,7 @@ import (
 	"os"
 
 	bio "github.com/takurooo/binaryio"
-	"github.com/takurooo/wavgo/riff"
+	"github.com/takurooo/wavgo/internal/riff"
 )
 
 // Writer ...
