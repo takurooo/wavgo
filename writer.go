@@ -4,14 +4,14 @@ import (
 	"errors"
 	"os"
 
-	bio "github.com/takurooo/binaryio"
+	"github.com/takurooo/binaryio"
 	"github.com/takurooo/wavgo/internal/riff"
 )
 
 // Writer ...
 type Writer struct {
 	f                 *os.File
-	bw                *bio.Writer
+	bw                *binaryio.Writer
 	format            *Format
 	headerWritten     bool
 	numWrittenSamples uint32
@@ -29,7 +29,7 @@ func (w *Writer) Open(filePath string) error {
 		return err
 	}
 	w.f = f
-	w.bw = bio.NewWriter(f)
+	w.bw = binaryio.NewWriter(f)
 	return nil
 }
 
@@ -39,29 +39,29 @@ func (w *Writer) Close() {
 	dataChunkSize := w.numWrittenSamples * uint32(w.format.BlockAlign)
 	riffChunkSize := dataChunkSize + wavHeaderSize - 8
 	w.bw.SetOffset(4)
-	w.bw.WriteU32(riffChunkSize, bio.LittleEndian)
+	w.bw.WriteU32(riffChunkSize, binaryio.LittleEndian)
 	w.bw.SetOffset(40)
-	w.bw.WriteU32(dataChunkSize, bio.LittleEndian)
+	w.bw.WriteU32(dataChunkSize, binaryio.LittleEndian)
 	w.f.Close()
 }
 
 func (w *Writer) writeHeader() {
 	// riff chunk
-	w.bw.WriteS32("RIFF", bio.BigEndian)
-	w.bw.WriteU32(0, bio.LittleEndian) // dummy write offset 4
-	w.bw.WriteS32("WAVE", bio.BigEndian)
+	w.bw.WriteS32("RIFF", binaryio.BigEndian)
+	w.bw.WriteU32(0, binaryio.LittleEndian) // dummy write offset 4
+	w.bw.WriteS32("WAVE", binaryio.BigEndian)
 	// fmt chunk
-	w.bw.WriteS32(riff.FMT, bio.BigEndian)
-	w.bw.WriteU32(0x10, bio.LittleEndian)
-	w.bw.WriteU16(w.format.AudioFormat, bio.LittleEndian)
-	w.bw.WriteU16(w.format.NumChannels, bio.LittleEndian)
-	w.bw.WriteU32(w.format.SampleRate, bio.LittleEndian)
-	w.bw.WriteU32(w.format.ByteRate, bio.LittleEndian)
-	w.bw.WriteU16(w.format.BlockAlign, bio.LittleEndian)
-	w.bw.WriteU16(w.format.BitsPerSample, bio.LittleEndian)
+	w.bw.WriteS32(riff.FMT, binaryio.BigEndian)
+	w.bw.WriteU32(0x10, binaryio.LittleEndian)
+	w.bw.WriteU16(w.format.AudioFormat, binaryio.LittleEndian)
+	w.bw.WriteU16(w.format.NumChannels, binaryio.LittleEndian)
+	w.bw.WriteU32(w.format.SampleRate, binaryio.LittleEndian)
+	w.bw.WriteU32(w.format.ByteRate, binaryio.LittleEndian)
+	w.bw.WriteU16(w.format.BlockAlign, binaryio.LittleEndian)
+	w.bw.WriteU16(w.format.BitsPerSample, binaryio.LittleEndian)
 	// data chunk
-	w.bw.WriteS32(riff.DATA, bio.BigEndian)
-	w.bw.WriteU32(0, bio.LittleEndian) // dummy write offset 40
+	w.bw.WriteS32(riff.DATA, binaryio.BigEndian)
+	w.bw.WriteU32(0, binaryio.LittleEndian) // dummy write offset 40
 }
 
 // WriteSamples ...
@@ -82,11 +82,11 @@ func (w *Writer) WriteSamples(samples []Sample) error {
 			case 8:
 				w.bw.WriteU8(uint8(sample[ch]))
 			case 16:
-				w.bw.WriteU16(uint16(sample[ch]), bio.LittleEndian)
+				w.bw.WriteU16(uint16(sample[ch]), binaryio.LittleEndian)
 			case 24:
-				w.bw.WriteU24(uint32(sample[ch]), bio.LittleEndian)
+				w.bw.WriteU24(uint32(sample[ch]), binaryio.LittleEndian)
 			case 32:
-				w.bw.WriteU32(uint32(sample[ch]), bio.LittleEndian)
+				w.bw.WriteU32(uint32(sample[ch]), binaryio.LittleEndian)
 			default:
 				return errors.New("not supported BitsPerSample")
 			}

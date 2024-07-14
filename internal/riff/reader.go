@@ -4,18 +4,18 @@ import (
 	"errors"
 	"io"
 
-	bio "github.com/takurooo/binaryio"
+	"github.com/takurooo/binaryio"
 )
 
 func ReadRIFFChunk(r io.ReaderAt) (*riffChunk, error) {
-	breader := bio.NewReader(r)
+	breader := binaryio.NewReader(r)
 	// ----------------------------
 	// Read RIFF Chunk
 	// ----------------------------
 	var (
-		chunkID   = breader.ReadS32(bio.BigEndian)
-		chunkSize = breader.ReadU32(bio.LittleEndian)
-		format    = breader.ReadS32(bio.BigEndian)
+		chunkID   = breader.ReadS32(binaryio.BigEndian)
+		chunkSize = breader.ReadU32(binaryio.LittleEndian)
+		format    = breader.ReadS32(binaryio.BigEndian)
 	)
 	if breader.Err() != nil {
 		return nil, breader.Err()
@@ -30,8 +30,8 @@ func ReadRIFFChunk(r io.ReaderAt) (*riffChunk, error) {
 	numBytesLeft := riffChunk.Size - 4
 	for 0 < numBytesLeft {
 		var (
-			subChunkID   = breader.ReadS32(bio.BigEndian)
-			subChunkSize = breader.ReadU32(bio.LittleEndian)
+			subChunkID   = breader.ReadS32(binaryio.BigEndian)
+			subChunkSize = breader.ReadU32(binaryio.LittleEndian)
 			chunkData    = breader.ReadRaw(uint64(subChunkSize))
 		)
 		if breader.Err() != nil {

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"os"
 
-	bio "github.com/takurooo/binaryio"
+	"github.com/takurooo/binaryio"
 	"github.com/takurooo/wavgo/internal/riff"
 )
 
@@ -14,7 +14,7 @@ type Reader struct {
 	f          *os.File
 	format     *Format
 	numSamples uint32
-	br         *bio.Reader
+	br         *binaryio.Reader
 }
 
 // NewReader ...
@@ -59,13 +59,6 @@ func (r *Reader) ReadOnMemory() error {
 		return err
 	}
 
-	// fmt.Println("AudioFormat    : ", r.format.AudioFormat)
-	// fmt.Println("NumChannels    : ", r.format.NumChannels)
-	// fmt.Println("SampleRate     : ", r.format.SampleRate)
-	// fmt.Println("ByteRate       : ", r.format.ByteRate)
-	// fmt.Println("BlockAlign     : ", r.format.BlockAlign)
-	// fmt.Println("BitsPerSample  : ", r.format.BitsPerSample)
-
 	// ----------------------------
 	// Data Chunk
 	// ----------------------------
@@ -75,7 +68,7 @@ func (r *Reader) ReadOnMemory() error {
 	}
 	r.numSamples = dataChunk.Size / uint32(r.format.BlockAlign)
 
-	r.br = bio.NewReader(bytes.NewReader(dataChunk.Data))
+	r.br = binaryio.NewReader(bytes.NewReader(dataChunk.Data))
 
 	return nil
 }
@@ -103,11 +96,11 @@ func (r *Reader) GetSamples(numSamples int) ([]Sample, error) {
 			case 8:
 				v = int(r.br.ReadU8())
 			case 16:
-				v = int(r.br.ReadU16(bio.LittleEndian))
+				v = int(r.br.ReadU16(binaryio.LittleEndian))
 			case 24:
-				v = int(r.br.ReadU24(bio.LittleEndian))
+				v = int(r.br.ReadU24(binaryio.LittleEndian))
 			case 32:
-				v = int(r.br.ReadU32(bio.LittleEndian))
+				v = int(r.br.ReadU32(binaryio.LittleEndian))
 			default:
 				return nil, errors.New("not supported BitsPerSample")
 			}
@@ -123,14 +116,14 @@ func (r *Reader) GetSamples(numSamples int) ([]Sample, error) {
 }
 
 func parseFormatChunkData(fmtChunk *riff.Chunk) (*Format, error) {
-	br := bio.NewReader(bytes.NewReader(fmtChunk.Data))
+	br := binaryio.NewReader(bytes.NewReader(fmtChunk.Data))
 	format := &Format{
-		AudioFormat:   br.ReadU16(bio.LittleEndian),
-		NumChannels:   br.ReadU16(bio.LittleEndian),
-		SampleRate:    br.ReadU32(bio.LittleEndian),
-		ByteRate:      br.ReadU32(bio.LittleEndian),
-		BlockAlign:    br.ReadU16(bio.LittleEndian),
-		BitsPerSample: br.ReadU16(bio.LittleEndian),
+		AudioFormat:   br.ReadU16(binaryio.LittleEndian),
+		NumChannels:   br.ReadU16(binaryio.LittleEndian),
+		SampleRate:    br.ReadU32(binaryio.LittleEndian),
+		ByteRate:      br.ReadU32(binaryio.LittleEndian),
+		BlockAlign:    br.ReadU16(binaryio.LittleEndian),
+		BitsPerSample: br.ReadU16(binaryio.LittleEndian),
 	}
 	if br.Err() != nil {
 		return nil, br.Err()
