@@ -11,15 +11,16 @@ import (
 
 // Reader ...
 type Reader struct {
-	f          *os.File
-	format     *Format
-	numSamples uint32
-	br         *binaryio.Reader
+	f              *os.File
+	format         Format
+	numSamples     uint32
+	numSamplesLeft uint32
+	br             *binaryio.Reader
 }
 
 // NewReader ...
 func NewReader() *Reader {
-	return &Reader{f: nil, format: nil, numSamples: 0, br: nil}
+	return &Reader{}
 }
 
 // Open ...
@@ -58,7 +59,6 @@ func (r *Reader) ReadOnMemory() error {
 	if err != nil {
 		return err
 	}
-
 	// ----------------------------
 	// Data Chunk
 	// ----------------------------
@@ -67,20 +67,24 @@ func (r *Reader) ReadOnMemory() error {
 		return err
 	}
 	r.numSamples = dataChunk.Size / uint32(r.format.BlockAlign)
-
+	r.numSamplesLeft = r.numSamples
 	r.br = binaryio.NewReader(bytes.NewReader(dataChunk.Data))
-
 	return nil
 }
 
 // GetFormat ...
-func (r *Reader) GetFormat(format *Format) {
-	*format = *(r.format)
+func (r *Reader) GetFormat() Format {
+	return r.format
 }
 
 // GetNumSamples ...
 func (r *Reader) GetNumSamples() uint32 {
 	return r.numSamples
+}
+
+// GetNumSamples ...
+func (r *Reader) GetNumSamplesLeft() uint32 {
+	return r.numSamplesLeft
 }
 
 // GetSamples ...
@@ -106,18 +110,19 @@ func (r *Reader) GetSamples(numSamples int) ([]Sample, error) {
 			}
 
 			if r.br.Err() != nil {
-				return samples, r.br.Err()
+				return nil, r.br.Err()
 			}
 
 			samples[i][ch] = v
 		}
+		r.numSamplesLeft -= 1
 	}
 	return samples, nil
 }
 
-func parseFormatChunkData(fmtChunk *riff.Chunk) (*Format, error) {
+func parseFormatChunkData(fmtChunk *riff.Chunk) (Format, error) {
 	br := binaryio.NewReader(bytes.NewReader(fmtChunk.Data))
-	format := &Format{
+	format := Format{
 		AudioFormat:   br.ReadU16(binaryio.LittleEndian),
 		NumChannels:   br.ReadU16(binaryio.LittleEndian),
 		SampleRate:    br.ReadU32(binaryio.LittleEndian),
@@ -126,7 +131,7 @@ func parseFormatChunkData(fmtChunk *riff.Chunk) (*Format, error) {
 		BitsPerSample: br.ReadU16(binaryio.LittleEndian),
 	}
 	if br.Err() != nil {
-		return nil, br.Err()
+		return Format{}, br.Err()
 	}
 	return format, nil
 }

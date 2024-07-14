@@ -2,50 +2,39 @@ package wavgo
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestReader(t *testing.T) {
 	var err error
-
 	r := NewReader()
-	if err = r.Open("testdata/test.wav"); err != nil {
-		t.Fatal(err)
-	}
+	err = r.Open("testdata/read_test.wav")
+	require.Nil(t, err)
 	defer r.Close()
 
 	err = r.ReadOnMemory()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 
-	var format Format
-	r.GetFormat(&format)
-
-	if format.NumChannels > 2 {
-		t.Fatalf("Invalid NumChannels: %d", format.NumChannels)
+	format := r.GetFormat()
+	wantFormat := Format{
+		AudioFormat:   1,
+		NumChannels:   2,
+		SampleRate:    44100,
+		ByteRate:      176400,
+		BlockAlign:    4,
+		BitsPerSample: 16,
 	}
-
-	if format.BitsPerSample != 8 &&
-		format.BitsPerSample != 16 &&
-		format.BitsPerSample != 24 &&
-		format.BitsPerSample != 32 {
-		t.Fatalf("Invalid BitsPerSample: %d", format.BitsPerSample)
-	}
+	require.Equal(t, wantFormat, format)
+	require.Equal(t, uint32(2), r.GetNumSamples())
+	require.Equal(t, uint32(2), r.GetNumSamplesLeft())
 
 	samples, err := r.GetSamples(2)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(samples) != 2 {
-		t.Fatalf("Invalid NumSamples: %d", len(samples))
-	}
-
-	if samples[0][0] != 1 ||
-		samples[0][1] != 2 ||
-		samples[1][0] != 3 ||
-		samples[1][1] != 4 {
-		t.Fatalf("Invalid Samples: %d", samples)
-	}
+	require.Nil(t, err)
+	require.Equal(t, 2, len(samples))
+	require.Equal(t, 1, samples[0][0])
+	require.Equal(t, 2, samples[0][1])
+	require.Equal(t, 3, samples[1][0])
+	require.Equal(t, 4, samples[1][1])
+	require.Equal(t, uint32(0), r.GetNumSamplesLeft())
 }
