@@ -8,7 +8,7 @@ func TestReader(t *testing.T) {
 	var err error
 
 	r := NewReader()
-	if err = r.Open("files/test.wav"); err != nil {
+	if err = r.Open("testdata/test.wav"); err != nil {
 		t.Fatal(err)
 	}
 	defer r.Close()

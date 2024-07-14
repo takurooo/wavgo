@@ -7,23 +7,23 @@ import (
 
 func TestWriter(t *testing.T) {
 	var err error
-
-	format := &Format{}
-	format.AudioFormat = AudioFormatPCM
-	format.NumChannels = 2
-	format.SampleRate = 48000
-	format.ByteRate = 128000
-	format.BlockAlign = 4
-	format.BitsPerSample = 16
+	format := &Format{
+		AudioFormat:   AudioFormatPCM,
+		NumChannels:   2,
+		SampleRate:    48000,
+		ByteRate:      128000,
+		BlockAlign:    4,
+		BitsPerSample: 16,
+	}
 
 	w := NewWriter(format)
-	err = w.Open("test.wav")
+	err = w.Open("testdata/output.wav")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
 		w.Close()
-		if err := os.Remove("test.wav"); err != nil {
+		if err := os.Remove("testdata/output.wav"); err != nil {
 			t.Fatal(err)
 		}
 	}()
