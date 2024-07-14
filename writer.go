@@ -10,11 +10,14 @@ import (
 
 // Writer ...
 type Writer struct {
-	f                 *os.File
-	bw                *binaryio.Writer
-	format            *Format
-	headerWritten     bool
-	numWrittenSamples uint32
+	f                   *os.File
+	bw                  *binaryio.Writer
+	format              *Format
+	headerWritten       bool
+	numWrittenSamples   uint32
+	headerSize          uint32
+	riffChunkSizeOffset int64
+	dataChunkSizeOffset int64
 }
 
 // NewWriter ...
@@ -34,21 +37,30 @@ func (w *Writer) Open(filePath string) error {
 }
 
 // Close ...
-func (w *Writer) Close() {
-	wavHeaderSize := uint32(44)
+func (w *Writer) Close() error {
 	dataChunkSize := w.numWrittenSamples * uint32(w.format.BlockAlign)
-	riffChunkSize := dataChunkSize + wavHeaderSize - 8
-	w.bw.SetOffset(4)
+	riffChunkSize := dataChunkSize + w.headerSize - 8
+	w.bw.SetOffset(w.riffChunkSizeOffset)
 	w.bw.WriteU32(riffChunkSize, binaryio.LittleEndian)
-	w.bw.SetOffset(40)
+	w.bw.SetOffset(w.dataChunkSizeOffset)
 	w.bw.WriteU32(dataChunkSize, binaryio.LittleEndian)
-	w.f.Close()
+	if w.bw.Err() != nil {
+		return w.bw.Err()
+	}
+	if err := w.f.Sync(); err != nil {
+		return nil
+	}
+	if err := w.f.Close(); err != nil {
+		return nil
+	}
+	return nil
 }
 
-func (w *Writer) writeHeader() {
+func (w *Writer) writeHeader() error {
 	// riff chunk
-	w.bw.WriteS32("RIFF", binaryio.BigEndian)
-	w.bw.WriteU32(0, binaryio.LittleEndian) // dummy write offset 4
+	w.bw.WriteS32(riff.RIFFChunkID, binaryio.BigEndian)
+	w.riffChunkSizeOffset = w.bw.GetOffset()
+	w.bw.WriteU32(0, binaryio.LittleEndian) // dummy write
 	w.bw.WriteS32("WAVE", binaryio.BigEndian)
 	// fmt chunk
 	w.bw.WriteS32(riff.FMTChunkID, binaryio.BigEndian)
@@ -61,21 +73,30 @@ func (w *Writer) writeHeader() {
 	w.bw.WriteU16(w.format.BitsPerSample, binaryio.LittleEndian)
 	// data chunk
 	w.bw.WriteS32(riff.DATAChunkID, binaryio.BigEndian)
-	w.bw.WriteU32(0, binaryio.LittleEndian) // dummy write offset 40
+	w.dataChunkSizeOffset = w.bw.GetOffset()
+	w.bw.WriteU32(0, binaryio.LittleEndian) // dummy write
+	if w.bw.Err() != nil {
+		return w.bw.Err()
+	}
+
+	w.headerSize = uint32(w.bw.GetOffset())
+	return nil
 }
 
 // WriteSamples ...
 func (w *Writer) WriteSamples(samples []Sample) error {
 	if !w.headerWritten {
-		w.writeHeader()
-		if w.bw.Err() != nil {
-			return w.bw.Err()
+		err := w.writeHeader()
+		if err != nil {
+			return nil
 		}
+		w.headerWritten = true
 	}
 
-	numChannels := int(w.format.NumChannels)
-	bitsPerSample := int(w.format.BitsPerSample)
-
+	var (
+		numChannels   = int(w.format.NumChannels)
+		bitsPerSample = int(w.format.BitsPerSample)
+	)
 	for _, sample := range samples {
 		for ch := 0; ch < numChannels; ch++ {
 			switch bitsPerSample {

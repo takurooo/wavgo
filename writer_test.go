@@ -22,7 +22,6 @@ func TestWriter(t *testing.T) {
 	err = w.Open("testdata/write_test_output.wav")
 	require.Nil(t, err)
 	defer func() {
-		w.Close()
 		if err := os.Remove("testdata/write_test_output.wav"); err != nil {
 			t.Fatal(err)
 		}
@@ -35,6 +34,9 @@ func TestWriter(t *testing.T) {
 		}
 	}
 	err = w.WriteSamples(samples)
+	require.Nil(t, err)
+
+	err = w.Close()
 	require.Nil(t, err)
 
 	b, err := os.ReadFile("testdata/write_test_output.wav")
