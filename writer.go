@@ -9,7 +9,7 @@ import (
 	"github.com/takurooo/wavgo/internal/riff"
 )
 
-// Writer ...
+// Writer outputs samples to a WAV file using the provided Format.
 type Writer struct {
 	f                   *os.File
 	bw                  *binio.Writer
@@ -21,12 +21,12 @@ type Writer struct {
 	dataChunkSizeOffset int64
 }
 
-// NewWriter ...
+// NewWriter returns a new Writer configured with the given Format.
 func NewWriter(format *Format) *Writer {
 	return &Writer{f: nil, bw: nil, format: format, headerWritten: false, numWrittenSamples: 0}
 }
 
-// Open ...
+// Open creates the destination WAV file.
 func (w *Writer) Open(filePath string) error {
 	f, err := os.Create(filePath)
 	if err != nil {
@@ -37,7 +37,7 @@ func (w *Writer) Open(filePath string) error {
 	return nil
 }
 
-// Close ...
+// Close finalizes the WAV file, writing sizes and closing the file handle.
 func (w *Writer) Close() error {
 	dataChunkSize := w.numWrittenSamples * uint32(w.format.BlockAlign)
 	riffChunkSize := dataChunkSize + w.headerSize - 8
@@ -84,7 +84,8 @@ func (w *Writer) writeHeader() error {
 	return nil
 }
 
-// WriteSamples ...
+// WriteSamples writes the provided samples to the file, writing the header on
+// the first call.
 func (w *Writer) WriteSamples(samples []Sample) error {
 	if !w.headerWritten {
 		err := w.writeHeader()

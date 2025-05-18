@@ -10,7 +10,7 @@ import (
 	"github.com/takurooo/wavgo/internal/riff"
 )
 
-// Reader ...
+// Reader provides access to the samples and metadata contained in a WAV file.
 type Reader struct {
 	f              *os.File
 	format         Format
@@ -19,12 +19,12 @@ type Reader struct {
 	br             *binio.Reader
 }
 
-// NewReader ...
+// NewReader creates an empty Reader.
 func NewReader() *Reader {
 	return &Reader{}
 }
 
-// Open ...
+// Open opens the specified WAV file for reading.
 func (r *Reader) Open(filePath string) error {
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -34,7 +34,7 @@ func (r *Reader) Open(filePath string) error {
 	return nil
 }
 
-// Close ...
+// Close closes the underlying file descriptor.
 func (r *Reader) Close() error {
 	if r.f == nil {
 		return nil
@@ -76,12 +76,12 @@ func (r *Reader) Load() error {
 	return nil
 }
 
-// GetFormat ...
+// GetFormat returns the file's format information.
 func (r *Reader) GetFormat() Format {
 	return r.format
 }
 
-// GetNumSamples ...
+// GetNumSamples returns the total number of samples in the file.
 func (r *Reader) GetNumSamples() uint32 {
 	return r.numSamples
 }
@@ -91,7 +91,7 @@ func (r *Reader) GetNumSamplesLeft() uint32 {
 	return r.numSamplesLeft
 }
 
-// GetSamples ...
+// GetSamples reads the next numSamples samples from the data chunk.
 func (r *Reader) GetSamples(numSamples int) ([]Sample, error) {
 	samples := make([]Sample, numSamples)
 	bitsPerSample := int(r.format.BitsPerSample)
