@@ -34,7 +34,7 @@ func main() {
     defer r.Close()
 
     // read and parse wave file
-    err = r.ReadOnMemory()
+    err = r.Load()
     if err != nil {
         panic(err)
     }

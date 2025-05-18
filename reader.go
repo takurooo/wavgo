@@ -39,8 +39,8 @@ func (r *Reader) Close() {
 	r.f.Close()
 }
 
-// ReadOnMemory ...
-func (r *Reader) ReadOnMemory() error {
+// Load reads and parses the WAV file into memory.
+func (r *Reader) Load() error {
 	// ----------------------------
 	// RIFF Chunk
 	// ----------------------------
