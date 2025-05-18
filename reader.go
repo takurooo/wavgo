@@ -82,7 +82,7 @@ func (r *Reader) GetNumSamples() uint32 {
 	return r.numSamples
 }
 
-// GetNumSamples ...
+// GetNumSamplesLeft returns the number of samples remaining.
 func (r *Reader) GetNumSamplesLeft() uint32 {
 	return r.numSamplesLeft
 }
