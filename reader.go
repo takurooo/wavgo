@@ -35,8 +35,11 @@ func (r *Reader) Open(filePath string) error {
 }
 
 // Close closes the underlying file descriptor.
-func (r *Reader) Close() {
-	r.f.Close()
+func (r *Reader) Close() error {
+	if r.f == nil {
+		return nil
+	}
+	return r.f.Close()
 }
 
 // Load reads and parses the WAV file into memory.

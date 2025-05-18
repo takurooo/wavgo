@@ -43,7 +43,11 @@ func main() {
     if err = r.Open("/path/to/your/file.wav"); err != nil {
         panic(err)
     }
-    defer r.Close()
+    defer func() {
+        if err := r.Close(); err != nil {
+            panic(err)
+        }
+    }()
 
     // read and parse wave file
     err = r.Load()

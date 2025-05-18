@@ -10,12 +10,12 @@ const (
 
 // Format describes the basic information stored in a WAV file's `fmt ` chunk.
 type Format struct {
-	AudioFormat   uint16
-	NumChannels   uint16
-	SampleRate    uint32
-	ByteRate      uint32
-	BlockAlign    uint16
-	BitsPerSample uint16
+	AudioFormat   uint16 // audio codec (1 is PCM)
+	NumChannels   uint16 // number of audio channels
+	SampleRate    uint32 // sampling frequency in Hz
+	ByteRate      uint32 // bytes per second
+	BlockAlign    uint16 // bytes per sample frame
+	BitsPerSample uint16 // bits used per sample
 }
 
 // Sample holds a single sample for up to two channels.
