@@ -1,21 +1,22 @@
 package riff
 
 import (
+	"encoding/binary"
 	"errors"
 	"io"
 
-	"github.com/takurooo/binaryio"
+	"github.com/takurooo/wavgo/internal/binio"
 )
 
 func ReadRIFFChunk(r io.ReaderAt) (*riffChunk, error) {
-	breader := binaryio.NewReader(r)
+	breader := binio.NewReader(r)
 	// ----------------------------
 	// Read RIFF Chunk
 	// ----------------------------
 	var (
-		chunkID   = breader.ReadS32(binaryio.BigEndian)
-		chunkSize = breader.ReadU32(binaryio.LittleEndian)
-		format    = breader.ReadS32(binaryio.BigEndian)
+		chunkID   = breader.ReadS32(binary.BigEndian)
+		chunkSize = breader.ReadU32(binary.LittleEndian)
+		format    = breader.ReadS32(binary.BigEndian)
 	)
 	if breader.Err() != nil {
 		return nil, breader.Err()
@@ -30,8 +31,8 @@ func ReadRIFFChunk(r io.ReaderAt) (*riffChunk, error) {
 	numBytesLeft := riffChunk.Size - 4
 	for 0 < numBytesLeft {
 		var (
-			subChunkID   = breader.ReadS32(binaryio.BigEndian)
-			subChunkSize = breader.ReadU32(binaryio.LittleEndian)
+			subChunkID   = breader.ReadS32(binary.BigEndian)
+			subChunkSize = breader.ReadU32(binary.LittleEndian)
 			chunkData    = breader.ReadRaw(uint64(subChunkSize))
 		)
 		if breader.Err() != nil {
