@@ -2,10 +2,11 @@ package wavgo
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"os"
 
-	"github.com/takurooo/binaryio"
+	"github.com/takurooo/wavgo/internal/binio"
 	"github.com/takurooo/wavgo/internal/riff"
 )
 
@@ -15,7 +16,7 @@ type Reader struct {
 	format         Format
 	numSamples     uint32
 	numSamplesLeft uint32
-	br             *binaryio.Reader
+	br             *binio.Reader
 }
 
 // NewReader ...
@@ -68,7 +69,7 @@ func (r *Reader) ReadOnMemory() error {
 	}
 	r.numSamples = dataChunk.Size / uint32(r.format.BlockAlign)
 	r.numSamplesLeft = r.numSamples
-	r.br = binaryio.NewReader(bytes.NewReader(dataChunk.Data))
+	r.br = binio.NewReader(bytes.NewReader(dataChunk.Data))
 	return nil
 }
 
@@ -100,11 +101,11 @@ func (r *Reader) GetSamples(numSamples int) ([]Sample, error) {
 			case 8:
 				v = int(r.br.ReadU8())
 			case 16:
-				v = int(r.br.ReadU16(binaryio.LittleEndian))
+				v = int(r.br.ReadU16(binary.LittleEndian))
 			case 24:
-				v = int(r.br.ReadU24(binaryio.LittleEndian))
+				v = int(r.br.ReadU24(binary.LittleEndian))
 			case 32:
-				v = int(r.br.ReadU32(binaryio.LittleEndian))
+				v = int(r.br.ReadU32(binary.LittleEndian))
 			default:
 				return nil, errors.New("not supported BitsPerSample")
 			}
@@ -121,14 +122,14 @@ func (r *Reader) GetSamples(numSamples int) ([]Sample, error) {
 }
 
 func parseFormatChunkData(fmtChunk *riff.Chunk) (Format, error) {
-	br := binaryio.NewReader(bytes.NewReader(fmtChunk.Data))
+	br := binio.NewReader(bytes.NewReader(fmtChunk.Data))
 	format := Format{
-		AudioFormat:   br.ReadU16(binaryio.LittleEndian),
-		NumChannels:   br.ReadU16(binaryio.LittleEndian),
-		SampleRate:    br.ReadU32(binaryio.LittleEndian),
-		ByteRate:      br.ReadU32(binaryio.LittleEndian),
-		BlockAlign:    br.ReadU16(binaryio.LittleEndian),
-		BitsPerSample: br.ReadU16(binaryio.LittleEndian),
+		AudioFormat:   br.ReadU16(binary.LittleEndian),
+		NumChannels:   br.ReadU16(binary.LittleEndian),
+		SampleRate:    br.ReadU32(binary.LittleEndian),
+		ByteRate:      br.ReadU32(binary.LittleEndian),
+		BlockAlign:    br.ReadU16(binary.LittleEndian),
+		BitsPerSample: br.ReadU16(binary.LittleEndian),
 	}
 	if br.Err() != nil {
 		return Format{}, br.Err()

@@ -3,8 +3,7 @@ module github.com/takurooo/wavgo
 go 1.21
 
 require (
-	github.com/stretchr/testify v1.9.0
-	github.com/takurooo/binaryio v0.0.0-20200902134553-3646975c5920
+        github.com/stretchr/testify v1.9.0
 )
 
 require (
