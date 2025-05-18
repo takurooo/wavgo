@@ -13,7 +13,7 @@ func TestReader(t *testing.T) {
 	require.Nil(t, err)
 	defer r.Close()
 
-	err = r.ReadOnMemory()
+	err = r.Load()
 	require.Nil(t, err)
 
 	format := r.GetFormat()
