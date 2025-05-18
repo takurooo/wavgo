@@ -1,6 +1,7 @@
 package wavgo
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -40,4 +41,19 @@ func TestReader(t *testing.T) {
 	require.Equal(t, 3, samples[1][0])
 	require.Equal(t, 4, samples[1][1])
 	require.Equal(t, uint32(0), r.GetNumSamplesLeft())
+}
+
+func TestReaderUnsupportedBitsPerSample(t *testing.T) {
+	r := NewReader()
+	err := r.Open("testdata/read_test.wav")
+	require.NoError(t, err)
+	defer r.Close()
+
+	err = r.Load()
+	require.NoError(t, err)
+
+	r.format.BitsPerSample = 7
+	samples, err := r.GetSamples(1)
+	require.Nil(t, samples)
+	require.True(t, errors.Is(err, ErrUnsupportedBitsPerSample))
 }

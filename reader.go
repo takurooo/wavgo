@@ -3,7 +3,6 @@ package wavgo
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"os"
 
 	"github.com/takurooo/wavgo/internal/binio"
@@ -110,7 +109,7 @@ func (r *Reader) GetSamples(numSamples int) ([]Sample, error) {
 			case 32:
 				v = int(r.br.ReadU32(binary.LittleEndian))
 			default:
-				return nil, errors.New("not supported BitsPerSample")
+				return nil, ErrUnsupportedBitsPerSample
 			}
 
 			if r.br.Err() != nil {

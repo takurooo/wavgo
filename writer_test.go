@@ -1,6 +1,7 @@
 package wavgo
 
 import (
+	"errors"
 	"os"
 	"testing"
 
@@ -44,4 +45,27 @@ func TestWriter(t *testing.T) {
 	want, err := os.ReadFile("testdata/write_test.wav.golden")
 	require.Nil(t, err)
 	require.Equal(t, want, b)
+}
+
+func TestWriterUnsupportedBitsPerSample(t *testing.T) {
+	format := &Format{
+		AudioFormat:   AudioFormatPCM,
+		NumChannels:   2,
+		SampleRate:    48000,
+		ByteRate:      128000,
+		BlockAlign:    4,
+		BitsPerSample: 7,
+	}
+
+	w := NewWriter(format)
+	err := w.Open("testdata/write_unsupported.wav")
+	require.NoError(t, err)
+	defer func() {
+		w.Close()
+		os.Remove("testdata/write_unsupported.wav")
+	}()
+
+	samples := make([]Sample, 1)
+	err = w.WriteSamples(samples)
+	require.True(t, errors.Is(err, ErrUnsupportedBitsPerSample))
 }

@@ -2,7 +2,6 @@ package wavgo
 
 import (
 	"encoding/binary"
-	"errors"
 	"os"
 
 	"github.com/takurooo/wavgo/internal/binio"
@@ -111,7 +110,7 @@ func (w *Writer) WriteSamples(samples []Sample) error {
 			case 32:
 				w.bw.WriteU32(uint32(sample[ch]), binary.LittleEndian)
 			default:
-				return errors.New("not supported BitsPerSample")
+				return ErrUnsupportedBitsPerSample
 			}
 
 			if w.bw.Err() != nil {
