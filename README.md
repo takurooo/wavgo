@@ -2,15 +2,27 @@
 
 [![codecov](https://codecov.io/gh/takurooo/wavgo/graph/badge.svg?token=63MH3X9PC4)](https://codecov.io/gh/takurooo/wavgo)
 
-<p align='center'>
-    <img src='./logo.jpg' width='130px' height='125px'/>
+<p align="center">
+  <img src="./logo.jpg" width="130px" height="125px" />
 </p>
 
-Wave file reader/writer for Go.
+`wavgo` is a small library for reading and writing WAV audio files in Go.
 
-## godoc
+## Features
 
-https://godoc.org/github.com/takurooo/wavgo
+- Parse WAV headers and access format information
+- Read sample data in common bit depths
+- Write new WAV files with custom formats
+
+## Install
+
+```bash
+go get github.com/takurooo/wavgo
+```
+
+## Documentation
+
+Full API documentation is available on [pkg.go.dev](https://pkg.go.dev/github.com/takurooo/wavgo).
 
 ## Examples
 
