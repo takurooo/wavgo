@@ -11,7 +11,10 @@ func TestReader(t *testing.T) {
 	r := NewReader()
 	err = r.Open("testdata/read_test.wav")
 	require.Nil(t, err)
-	defer r.Close()
+	defer func() {
+		cerr := r.Close()
+		require.Nil(t, cerr)
+	}()
 
 	err = r.Load()
 	require.Nil(t, err)
