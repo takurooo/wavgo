@@ -19,32 +19,50 @@ func TestReader(t *testing.T) {
 		'T', 'E', 'S', 'T', // string: "TEST"
 	}
 
-	reader := NewReader(bytes.NewReader(data))
+	t.Run("ReadU8", func(t *testing.T) {
+		reader := NewReader(bytes.NewReader(data))
+		u8 := reader.ReadU8()
+		require.NoError(t, reader.Err())
+		require.Equal(t, uint8(0x01), u8)
+	})
 
-	// Test ReadU8
-	u8 := reader.ReadU8()
-	require.NoError(t, reader.Err())
-	require.Equal(t, uint8(0x01), u8)
+	t.Run("ReadU16_LittleEndian", func(t *testing.T) {
+		reader := NewReader(bytes.NewReader(data))
+		reader.ReadU8() // Skip first byte
+		u16 := reader.ReadU16(binary.LittleEndian)
+		require.NoError(t, reader.Err())
+		require.Equal(t, uint16(0x0302), u16)
+	})
 
-	// Test ReadU16 Little Endian
-	u16 := reader.ReadU16(binary.LittleEndian)
-	require.NoError(t, reader.Err())
-	require.Equal(t, uint16(0x0302), u16)
+	t.Run("ReadU24_LittleEndian", func(t *testing.T) {
+		reader := NewReader(bytes.NewReader(data))
+		reader.ReadU8()                              // Skip first byte
+		reader.ReadU16(binary.LittleEndian)          // Skip next 2 bytes
+		u24 := reader.ReadU24(binary.LittleEndian)
+		require.NoError(t, reader.Err())
+		require.Equal(t, uint32(0x060504), u24)
+	})
 
-	// Test ReadU24 Little Endian
-	u24 := reader.ReadU24(binary.LittleEndian)
-	require.NoError(t, reader.Err())
-	require.Equal(t, uint32(0x060504), u24)
+	t.Run("ReadU32_LittleEndian", func(t *testing.T) {
+		reader := NewReader(bytes.NewReader(data))
+		reader.ReadU8()                              // Skip first byte
+		reader.ReadU16(binary.LittleEndian)          // Skip next 2 bytes
+		reader.ReadU24(binary.LittleEndian)          // Skip next 3 bytes
+		u32 := reader.ReadU32(binary.LittleEndian)
+		require.NoError(t, reader.Err())
+		require.Equal(t, uint32(0x0A090807), u32)
+	})
 
-	// Test ReadU32 Little Endian
-	u32 := reader.ReadU32(binary.LittleEndian)
-	require.NoError(t, reader.Err())
-	require.Equal(t, uint32(0x0A090807), u32)
-
-	// Test ReadS32
-	s32 := reader.ReadS32(binary.LittleEndian)
-	require.NoError(t, reader.Err())
-	require.Equal(t, "TEST", s32)
+	t.Run("ReadS32", func(t *testing.T) {
+		reader := NewReader(bytes.NewReader(data))
+		reader.ReadU8()                              // Skip first byte
+		reader.ReadU16(binary.LittleEndian)          // Skip next 2 bytes
+		reader.ReadU24(binary.LittleEndian)          // Skip next 3 bytes
+		reader.ReadU32(binary.LittleEndian)          // Skip next 4 bytes
+		s32 := reader.ReadS32(binary.LittleEndian)
+		require.NoError(t, reader.Err())
+		require.Equal(t, "TEST", s32)
+	})
 }
 
 func TestReaderBigEndian(t *testing.T) {
@@ -54,35 +72,48 @@ func TestReaderBigEndian(t *testing.T) {
 		0x06, 0x07, 0x08, 0x09, // uint32 BE: 101124105
 	}
 
-	reader := NewReader(bytes.NewReader(data))
+	t.Run("ReadU16_BigEndian", func(t *testing.T) {
+		reader := NewReader(bytes.NewReader(data))
+		u16 := reader.ReadU16(binary.BigEndian)
+		require.NoError(t, reader.Err())
+		require.Equal(t, uint16(0x0102), u16)
+	})
 
-	// Test ReadU16 Big Endian
-	u16 := reader.ReadU16(binary.BigEndian)
-	require.NoError(t, reader.Err())
-	require.Equal(t, uint16(0x0102), u16)
+	t.Run("ReadU24_BigEndian", func(t *testing.T) {
+		reader := NewReader(bytes.NewReader(data))
+		reader.ReadU16(binary.BigEndian) // Skip first 2 bytes
+		u24 := reader.ReadU24(binary.BigEndian)
+		require.NoError(t, reader.Err())
+		require.Equal(t, uint32(0x030405), u24)
+	})
 
-	// Test ReadU24 Big Endian
-	u24 := reader.ReadU24(binary.BigEndian)
-	require.NoError(t, reader.Err())
-	require.Equal(t, uint32(0x030405), u24)
-
-	// Test ReadU32 Big Endian
-	u32 := reader.ReadU32(binary.BigEndian)
-	require.NoError(t, reader.Err())
-	require.Equal(t, uint32(0x06070809), u32)
+	t.Run("ReadU32_BigEndian", func(t *testing.T) {
+		reader := NewReader(bytes.NewReader(data))
+		reader.ReadU16(binary.BigEndian)  // Skip first 2 bytes
+		reader.ReadU24(binary.BigEndian)  // Skip next 3 bytes
+		u32 := reader.ReadU32(binary.BigEndian)
+		require.NoError(t, reader.Err())
+		require.Equal(t, uint32(0x06070809), u32)
+	})
 }
 
 func TestReaderRaw(t *testing.T) {
 	data := []byte{0x01, 0x02, 0x03, 0x04, 0x05}
-	reader := NewReader(bytes.NewReader(data))
 
-	raw := reader.ReadRaw(3)
-	require.NoError(t, reader.Err())
-	require.Equal(t, []byte{0x01, 0x02, 0x03}, raw)
+	t.Run("ReadRaw_FirstChunk", func(t *testing.T) {
+		reader := NewReader(bytes.NewReader(data))
+		raw := reader.ReadRaw(3)
+		require.NoError(t, reader.Err())
+		require.Equal(t, []byte{0x01, 0x02, 0x03}, raw)
+	})
 
-	raw2 := reader.ReadRaw(2)
-	require.NoError(t, reader.Err())
-	require.Equal(t, []byte{0x04, 0x05}, raw2)
+	t.Run("ReadRaw_Sequential", func(t *testing.T) {
+		reader := NewReader(bytes.NewReader(data))
+		reader.ReadRaw(3) // Read first 3 bytes
+		raw2 := reader.ReadRaw(2)
+		require.NoError(t, reader.Err())
+		require.Equal(t, []byte{0x04, 0x05}, raw2)
+	})
 }
 
 func TestReaderErrorHandling(t *testing.T) {

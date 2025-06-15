@@ -10,30 +10,6 @@ import (
 )
 
 func TestWriter(t *testing.T) {
-	buf := &seekableBuffer{}
-	writer := NewWriter(buf)
-
-	// Test WriteU8
-	writer.WriteU8(0x01)
-	require.NoError(t, writer.Err())
-
-	// Test WriteU16 Little Endian
-	writer.WriteU16(0x0302, binary.LittleEndian)
-	require.NoError(t, writer.Err())
-
-	// Test WriteU24 Little Endian
-	writer.WriteU24(0x060504, binary.LittleEndian)
-	require.NoError(t, writer.Err())
-
-	// Test WriteU32 Little Endian
-	writer.WriteU32(0x0A090807, binary.LittleEndian)
-	require.NoError(t, writer.Err())
-
-	// Test WriteS32
-	writer.WriteS32("TEST", binary.LittleEndian)
-	require.NoError(t, writer.Err())
-
-	// Verify written data
 	expected := []byte{
 		0x01,                   // uint8: 1
 		0x02, 0x03,             // uint16 LE: 770
@@ -41,32 +17,104 @@ func TestWriter(t *testing.T) {
 		0x07, 0x08, 0x09, 0x0A, // uint32 LE: 168496135
 		'T', 'E', 'S', 'T',     // string: "TEST"
 	}
-	require.Equal(t, expected, buf.Bytes())
-	require.Equal(t, int64(len(expected)), writer.GetOffset())
+
+	t.Run("WriteU8", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU8(0x01)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0x01}, buf.Bytes())
+	})
+
+	t.Run("WriteU16_LittleEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU16(0x0302, binary.LittleEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0x02, 0x03}, buf.Bytes())
+	})
+
+	t.Run("WriteU24_LittleEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU24(0x060504, binary.LittleEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0x04, 0x05, 0x06}, buf.Bytes())
+	})
+
+	t.Run("WriteU32_LittleEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU32(0x0A090807, binary.LittleEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0x07, 0x08, 0x09, 0x0A}, buf.Bytes())
+	})
+
+	t.Run("WriteS32", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteS32("TEST", binary.LittleEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{'T', 'E', 'S', 'T'}, buf.Bytes())
+	})
+
+	t.Run("SequentialWrites", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+
+		writer.WriteU8(0x01)
+		writer.WriteU16(0x0302, binary.LittleEndian)
+		writer.WriteU24(0x060504, binary.LittleEndian)
+		writer.WriteU32(0x0A090807, binary.LittleEndian)
+		writer.WriteS32("TEST", binary.LittleEndian)
+		require.NoError(t, writer.Err())
+
+		require.Equal(t, expected, buf.Bytes())
+		require.Equal(t, int64(len(expected)), writer.GetOffset())
+	})
 }
 
 func TestWriterBigEndian(t *testing.T) {
-	buf := &seekableBuffer{}
-	writer := NewWriter(buf)
+	t.Run("WriteU16_BigEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU16(0x0102, binary.BigEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0x01, 0x02}, buf.Bytes())
+	})
 
-	// Test WriteU16 Big Endian
-	writer.WriteU16(0x0102, binary.BigEndian)
-	require.NoError(t, writer.Err())
+	t.Run("WriteU24_BigEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU24(0x030405, binary.BigEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0x03, 0x04, 0x05}, buf.Bytes())
+	})
 
-	// Test WriteU24 Big Endian
-	writer.WriteU24(0x030405, binary.BigEndian)
-	require.NoError(t, writer.Err())
+	t.Run("WriteU32_BigEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU32(0x06070809, binary.BigEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0x06, 0x07, 0x08, 0x09}, buf.Bytes())
+	})
 
-	// Test WriteU32 Big Endian
-	writer.WriteU32(0x06070809, binary.BigEndian)
-	require.NoError(t, writer.Err())
+	t.Run("SequentialWrites_BigEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
 
-	expected := []byte{
-		0x01, 0x02,             // uint16 BE: 258
-		0x03, 0x04, 0x05,       // uint24 BE: 197637
-		0x06, 0x07, 0x08, 0x09, // uint32 BE: 101124105
-	}
-	require.Equal(t, expected, buf.Bytes())
+		writer.WriteU16(0x0102, binary.BigEndian)
+		writer.WriteU24(0x030405, binary.BigEndian)
+		writer.WriteU32(0x06070809, binary.BigEndian)
+		require.NoError(t, writer.Err())
+
+		expected := []byte{
+			0x01, 0x02,             // uint16 BE: 258
+			0x03, 0x04, 0x05,       // uint24 BE: 197637
+			0x06, 0x07, 0x08, 0x09, // uint32 BE: 101124105
+		}
+		require.Equal(t, expected, buf.Bytes())
+	})
 }
 
 func TestWriterSeekAndOffset(t *testing.T) {
@@ -93,37 +141,40 @@ func TestWriterSeekAndOffset(t *testing.T) {
 }
 
 func TestWriterStringValidation(t *testing.T) {
-	buf := &seekableBuffer{}
-	writer := NewWriter(buf)
+	t.Run("ValidString", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteS32("RIFF", binary.LittleEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte("RIFF"), buf.Bytes())
+	})
 
-	// Test valid 4-character string
-	writer.WriteS32("RIFF", binary.LittleEndian)
-	require.NoError(t, writer.Err())
-	require.Equal(t, []byte("RIFF"), buf.Bytes())
+	t.Run("StringTooShort", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteS32("ABC", binary.LittleEndian)
+		require.Error(t, writer.Err())
+		require.EqualError(t, writer.Err(), "string must be exactly 4 characters")
+		require.Empty(t, buf.Bytes())
+	})
 
-	// Test invalid string length (too short)
-	buf.Reset()
-	writer = NewWriter(buf)
-	writer.WriteS32("ABC", binary.LittleEndian)
-	require.Error(t, writer.Err())
-	require.EqualError(t, writer.Err(), "string must be exactly 4 characters")
-	require.Empty(t, buf.Bytes())
+	t.Run("StringTooLong", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteS32("TOOLONG", binary.LittleEndian)
+		require.Error(t, writer.Err())
+		require.EqualError(t, writer.Err(), "string must be exactly 4 characters")
+		require.Empty(t, buf.Bytes())
+	})
 
-	// Test invalid string length (too long)
-	buf.Reset()
-	writer = NewWriter(buf)
-	writer.WriteS32("TOOLONG", binary.LittleEndian)
-	require.Error(t, writer.Err())
-	require.EqualError(t, writer.Err(), "string must be exactly 4 characters")
-	require.Empty(t, buf.Bytes())
-
-	// Test empty string
-	buf.Reset()
-	writer = NewWriter(buf)
-	writer.WriteS32("", binary.LittleEndian)
-	require.Error(t, writer.Err())
-	require.EqualError(t, writer.Err(), "string must be exactly 4 characters")
-	require.Empty(t, buf.Bytes())
+	t.Run("EmptyString", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteS32("", binary.LittleEndian)
+		require.Error(t, writer.Err())
+		require.EqualError(t, writer.Err(), "string must be exactly 4 characters")
+		require.Empty(t, buf.Bytes())
+	})
 }
 
 func TestWriterErrorHandling(t *testing.T) {
@@ -160,33 +211,37 @@ func TestWriterSeekError(t *testing.T) {
 }
 
 func TestWriterU24EdgeCases(t *testing.T) {
-	buf := &seekableBuffer{}
-	writer := NewWriter(buf)
+	t.Run("MaxValue_LittleEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU24(0xFFFFFF, binary.LittleEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0xFF, 0xFF, 0xFF}, buf.Bytes())
+	})
 
-	// Test maximum 24-bit value
-	writer.WriteU24(0xFFFFFF, binary.LittleEndian)
-	require.NoError(t, writer.Err())
-	require.Equal(t, []byte{0xFF, 0xFF, 0xFF}, buf.Bytes())
+	t.Run("MaxValue_BigEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU24(0xFFFFFF, binary.BigEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0xFF, 0xFF, 0xFF}, buf.Bytes())
+	})
 
-	// Test with big endian
-	buf.Reset()
-	writer = NewWriter(buf)
-	writer.WriteU24(0xFFFFFF, binary.BigEndian)
-	require.NoError(t, writer.Err())
-	require.Equal(t, []byte{0xFF, 0xFF, 0xFF}, buf.Bytes())
+	t.Run("MixedEndianness_LittleEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU24(0x123456, binary.LittleEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0x56, 0x34, 0x12}, buf.Bytes())
+	})
 
-	// Test with mixed endianness
-	buf.Reset()
-	writer = NewWriter(buf)
-	writer.WriteU24(0x123456, binary.LittleEndian)
-	require.NoError(t, writer.Err())
-	require.Equal(t, []byte{0x56, 0x34, 0x12}, buf.Bytes())
-
-	buf.Reset()
-	writer = NewWriter(buf)
-	writer.WriteU24(0x123456, binary.BigEndian)
-	require.NoError(t, writer.Err())
-	require.Equal(t, []byte{0x12, 0x34, 0x56}, buf.Bytes())
+	t.Run("MixedEndianness_BigEndian", func(t *testing.T) {
+		buf := &seekableBuffer{}
+		writer := NewWriter(buf)
+		writer.WriteU24(0x123456, binary.BigEndian)
+		require.NoError(t, writer.Err())
+		require.Equal(t, []byte{0x12, 0x34, 0x56}, buf.Bytes())
+	})
 }
 
 // Mock types for testing error conditions

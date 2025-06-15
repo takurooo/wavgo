@@ -110,84 +110,81 @@ func TestReaderGetSamplesBeforeLoad(t *testing.T) {
 }
 
 func TestReaderFormatValidation(t *testing.T) {
-	// Create a mock WAV file with invalid format fields
-	testCases := []struct {
-		name        string
-		setupFormat func() []byte
-		expectedErr string
-	}{
-		{
-			name: "zero channels",
-			setupFormat: func() []byte {
-				return []byte{
-					0x01, 0x00, // AudioFormat = 1
-					0x00, 0x00, // NumChannels = 0
-					0x44, 0xAC, 0x00, 0x00, // SampleRate = 44100
-					0x88, 0x58, 0x01, 0x00, // ByteRate
-					0x02, 0x00, // BlockAlign = 2
-					0x10, 0x00, // BitsPerSample = 16
-				}
+	t.Run("ZeroChannels", func(t *testing.T) {
+		mockChunk := &riff.Chunk{
+			ID:   "fmt ",
+			Size: 16,
+			Data: []byte{
+				0x01, 0x00, // AudioFormat = 1
+				0x00, 0x00, // NumChannels = 0
+				0x44, 0xAC, 0x00, 0x00, // SampleRate = 44100
+				0x88, 0x58, 0x01, 0x00, // ByteRate
+				0x02, 0x00, // BlockAlign = 2
+				0x10, 0x00, // BitsPerSample = 16
 			},
-			expectedErr: "invalid NumChannels: must be greater than 0",
-		},
-		{
-			name: "zero sample rate",
-			setupFormat: func() []byte {
-				return []byte{
-					0x01, 0x00, // AudioFormat = 1
-					0x02, 0x00, // NumChannels = 2
-					0x00, 0x00, 0x00, 0x00, // SampleRate = 0
-					0x88, 0x58, 0x01, 0x00, // ByteRate
-					0x02, 0x00, // BlockAlign = 2
-					0x10, 0x00, // BitsPerSample = 16
-				}
-			},
-			expectedErr: "invalid SampleRate: must be greater than 0",
-		},
-		{
-			name: "zero block align",
-			setupFormat: func() []byte {
-				return []byte{
-					0x01, 0x00, // AudioFormat = 1
-					0x02, 0x00, // NumChannels = 2
-					0x44, 0xAC, 0x00, 0x00, // SampleRate = 44100
-					0x88, 0x58, 0x01, 0x00, // ByteRate
-					0x00, 0x00, // BlockAlign = 0
-					0x10, 0x00, // BitsPerSample = 16
-				}
-			},
-			expectedErr: "invalid BlockAlign: must be greater than 0",
-		},
-		{
-			name: "zero bits per sample",
-			setupFormat: func() []byte {
-				return []byte{
-					0x01, 0x00, // AudioFormat = 1
-					0x02, 0x00, // NumChannels = 2
-					0x44, 0xAC, 0x00, 0x00, // SampleRate = 44100
-					0x88, 0x58, 0x01, 0x00, // ByteRate
-					0x04, 0x00, // BlockAlign = 4
-					0x00, 0x00, // BitsPerSample = 0
-				}
-			},
-			expectedErr: "invalid BitsPerSample: must be greater than 0",
-		},
-	}
+		}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// Create a mock RIFF chunk with invalid format
-			mockChunk := &riff.Chunk{
-				ID:   "fmt ",
-				Size: 16,
-				Data: tc.setupFormat(),
-			}
+		_, err := parseFormatChunkData(mockChunk)
+		require.Error(t, err)
+		require.EqualError(t, err, "invalid NumChannels: must be greater than 0")
+	})
 
-			_, err := parseFormatChunkData(mockChunk)
-			require.Error(t, err)
-			require.EqualError(t, err, tc.expectedErr)
-		})
-	}
+	t.Run("ZeroSampleRate", func(t *testing.T) {
+		mockChunk := &riff.Chunk{
+			ID:   "fmt ",
+			Size: 16,
+			Data: []byte{
+				0x01, 0x00, // AudioFormat = 1
+				0x02, 0x00, // NumChannels = 2
+				0x00, 0x00, 0x00, 0x00, // SampleRate = 0
+				0x88, 0x58, 0x01, 0x00, // ByteRate
+				0x02, 0x00, // BlockAlign = 2
+				0x10, 0x00, // BitsPerSample = 16
+			},
+		}
+
+		_, err := parseFormatChunkData(mockChunk)
+		require.Error(t, err)
+		require.EqualError(t, err, "invalid SampleRate: must be greater than 0")
+	})
+
+	t.Run("ZeroBlockAlign", func(t *testing.T) {
+		mockChunk := &riff.Chunk{
+			ID:   "fmt ",
+			Size: 16,
+			Data: []byte{
+				0x01, 0x00, // AudioFormat = 1
+				0x02, 0x00, // NumChannels = 2
+				0x44, 0xAC, 0x00, 0x00, // SampleRate = 44100
+				0x88, 0x58, 0x01, 0x00, // ByteRate
+				0x00, 0x00, // BlockAlign = 0
+				0x10, 0x00, // BitsPerSample = 16
+			},
+		}
+
+		_, err := parseFormatChunkData(mockChunk)
+		require.Error(t, err)
+		require.EqualError(t, err, "invalid BlockAlign: must be greater than 0")
+	})
+
+	t.Run("ZeroBitsPerSample", func(t *testing.T) {
+		mockChunk := &riff.Chunk{
+			ID:   "fmt ",
+			Size: 16,
+			Data: []byte{
+				0x01, 0x00, // AudioFormat = 1
+				0x02, 0x00, // NumChannels = 2
+				0x44, 0xAC, 0x00, 0x00, // SampleRate = 44100
+				0x88, 0x58, 0x01, 0x00, // ByteRate
+				0x04, 0x00, // BlockAlign = 4
+				0x00, 0x00, // BitsPerSample = 0
+			},
+		}
+
+		_, err := parseFormatChunkData(mockChunk)
+		require.Error(t, err)
+		require.EqualError(t, err, "invalid BitsPerSample: must be greater than 0")
+	})
 }
 
 func TestReaderGetNumSamplesAndLeft(t *testing.T) {

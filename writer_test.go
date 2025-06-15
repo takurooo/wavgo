@@ -96,75 +96,93 @@ func TestWriterEmptyFile(t *testing.T) {
 }
 
 func TestWriterMultipleFormats(t *testing.T) {
-	testCases := []struct {
-		name    string
-		format  *Format
-		samples []Sample
-	}{
-		{
-			name: "8-bit mono",
-			format: &Format{
-				AudioFormat:   AudioFormatPCM,
-				NumChannels:   1,
-				SampleRate:    22050,
-				ByteRate:      22050,
-				BlockAlign:    1,
-				BitsPerSample: 8,
-			},
-			samples: []Sample{{100, 0}},
-		},
-		{
-			name: "16-bit stereo",
-			format: &Format{
-				AudioFormat:   AudioFormatPCM,
-				NumChannels:   2,
-				SampleRate:    44100,
-				ByteRate:      176400,
-				BlockAlign:    4,
-				BitsPerSample: 16,
-			},
-			samples: []Sample{{-1000, 1000}},
-		},
-		{
-			name: "24-bit stereo",
-			format: &Format{
-				AudioFormat:   AudioFormatPCM,
-				NumChannels:   2,
-				SampleRate:    48000,
-				ByteRate:      288000,
-				BlockAlign:    6,
-				BitsPerSample: 24,
-			},
-			samples: []Sample{{-100000, 100000}},
-		},
-		{
-			name: "32-bit stereo",
-			format: &Format{
-				AudioFormat:   AudioFormatPCM,
-				NumChannels:   2,
-				SampleRate:    96000,
-				ByteRate:      768000,
-				BlockAlign:    8,
-				BitsPerSample: 32,
-			},
-			samples: []Sample{{-1000000, 1000000}},
-		},
-	}
+	t.Run("8BitMono", func(t *testing.T) {
+		format := &Format{
+			AudioFormat:   AudioFormatPCM,
+			NumChannels:   1,
+			SampleRate:    22050,
+			ByteRate:      22050,
+			BlockAlign:    1,
+			BitsPerSample: 8,
+		}
+		samples := []Sample{{100, 0}}
+		filename := "testdata/TestWriterMultipleFormats_8BitMono.wav"
+		w := NewWriter(format)
+		err := w.Open(filename)
+		require.NoError(t, err)
+		defer os.Remove(filename)
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			filename := "testdata/TestWriterMultipleFormats.wav"
-			w := NewWriter(tc.format)
-			err := w.Open(filename)
-			require.NoError(t, err)
-			defer os.Remove(filename)
+		err = w.WriteSamples(samples)
+		require.NoError(t, err)
+		err = w.Close()
+		require.NoError(t, err)
+	})
 
-			err = w.WriteSamples(tc.samples)
-			require.NoError(t, err)
-			err = w.Close()
-			require.NoError(t, err)
-		})
-	}
+	t.Run("16BitStereo", func(t *testing.T) {
+		format := &Format{
+			AudioFormat:   AudioFormatPCM,
+			NumChannels:   2,
+			SampleRate:    44100,
+			ByteRate:      176400,
+			BlockAlign:    4,
+			BitsPerSample: 16,
+		}
+		samples := []Sample{{-1000, 1000}}
+		filename := "testdata/TestWriterMultipleFormats_16BitStereo.wav"
+		w := NewWriter(format)
+		err := w.Open(filename)
+		require.NoError(t, err)
+		defer os.Remove(filename)
+
+		err = w.WriteSamples(samples)
+		require.NoError(t, err)
+		err = w.Close()
+		require.NoError(t, err)
+	})
+
+	t.Run("24BitStereo", func(t *testing.T) {
+		format := &Format{
+			AudioFormat:   AudioFormatPCM,
+			NumChannels:   2,
+			SampleRate:    48000,
+			ByteRate:      288000,
+			BlockAlign:    6,
+			BitsPerSample: 24,
+		}
+		samples := []Sample{{-100000, 100000}}
+		filename := "testdata/TestWriterMultipleFormats_24BitStereo.wav"
+		w := NewWriter(format)
+		err := w.Open(filename)
+		require.NoError(t, err)
+		defer os.Remove(filename)
+
+		err = w.WriteSamples(samples)
+		require.NoError(t, err)
+		err = w.Close()
+		require.NoError(t, err)
+	})
+
+	t.Run("32BitStereo", func(t *testing.T) {
+		format := &Format{
+			AudioFormat:   AudioFormatPCM,
+			NumChannels:   2,
+			SampleRate:    96000,
+			ByteRate:      768000,
+			BlockAlign:    8,
+			BitsPerSample: 32,
+		}
+		samples := []Sample{{-1000000, 1000000}}
+		filename := "testdata/TestWriterMultipleFormats_32BitStereo.wav"
+		w := NewWriter(format)
+		err := w.Open(filename)
+		require.NoError(t, err)
+		defer os.Remove(filename)
+
+		err = w.WriteSamples(samples)
+		require.NoError(t, err)
+		err = w.Close()
+		require.NoError(t, err)
+	})
 }
 
 func TestWriterIncrementalWrites(t *testing.T) {
