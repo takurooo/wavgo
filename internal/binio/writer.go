@@ -2,6 +2,7 @@ package binio
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 )
 
@@ -64,7 +65,7 @@ func (bw *Writer) WriteU32(v uint32, order binary.ByteOrder) {
 func (bw *Writer) WriteS32(s string, order binary.ByteOrder) {
 	_ = order // order is ignored for strings
 	if len(s) != 4 {
-		bw.err = io.ErrShortWrite
+		bw.err = errors.New("string must be exactly 4 characters")
 		return
 	}
 	bw.write([]byte(s))

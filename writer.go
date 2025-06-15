@@ -42,6 +42,9 @@ func (w *Writer) Close() error {
 	riffChunkSize := dataChunkSize + w.headerSize - 8
 	w.bw.SetOffset(w.riffChunkSizeOffset)
 	w.bw.WriteU32(riffChunkSize, binary.LittleEndian)
+	if w.bw.Err() != nil {
+		return w.bw.Err()
+	}
 	w.bw.SetOffset(w.dataChunkSizeOffset)
 	w.bw.WriteU32(dataChunkSize, binary.LittleEndian)
 	if w.bw.Err() != nil {
