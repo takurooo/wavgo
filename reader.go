@@ -19,12 +19,16 @@ type Reader struct {
 	br             *binio.Reader
 }
 
-// NewReader creates an empty Reader.
+// NewReader creates a new WAV file reader instance. The returned reader
+// must be opened with Open() and loaded with Load() before it can be used
+// to read audio samples.
 func NewReader() *Reader {
 	return &Reader{}
 }
 
-// Open opens the specified WAV file for reading.
+// Open opens the specified WAV file for reading. This method only opens
+// the file handle; you must call Load() to parse the WAV structure and
+// prepare for reading samples.
 func (r *Reader) Open(filePath string) error {
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -34,7 +38,8 @@ func (r *Reader) Open(filePath string) error {
 	return nil
 }
 
-// Close closes the underlying file descriptor.
+// Close closes the underlying file descriptor and releases associated resources.
+// It returns any error encountered during the close operation.
 func (r *Reader) Close() error {
 	if r.f == nil {
 		return nil
@@ -42,7 +47,10 @@ func (r *Reader) Close() error {
 	return r.f.Close()
 }
 
-// Load reads and parses the WAV file into memory.
+// Load reads and parses the WAV file structure into memory, including the
+// RIFF header, format chunk, and data chunk. This method must be called
+// after Open() and before attempting to read samples. The entire audio
+// data is loaded into memory for efficient access.
 func (r *Reader) Load() error {
 	// ----------------------------
 	// RIFF Chunk
@@ -76,22 +84,28 @@ func (r *Reader) Load() error {
 	return nil
 }
 
-// GetFormat returns the file's format information.
+// GetFormat returns the audio format information extracted from the WAV file's
+// fmt chunk, including sample rate, bit depth, and channel configuration.
 func (r *Reader) GetFormat() Format {
 	return r.format
 }
 
-// GetNumSamples returns the total number of samples in the file.
+// GetNumSamples returns the total number of audio sample frames in the file.
+// Each sample frame contains data for all channels.
 func (r *Reader) GetNumSamples() uint32 {
 	return r.numSamples
 }
 
-// GetNumSamplesLeft returns the number of samples remaining.
+// GetNumSamplesLeft returns the number of sample frames remaining to be read.
+// This value decreases as samples are read with GetSamples().
 func (r *Reader) GetNumSamplesLeft() uint32 {
 	return r.numSamplesLeft
 }
 
-// GetSamples reads the next numSamples samples from the data chunk.
+// GetSamples reads the next numSamples sample frames from the audio data.
+// Each returned Sample contains data for all channels in the audio file.
+// The method returns an error if the requested number of samples exceeds
+// the remaining samples or if numSamples is negative.
 func (r *Reader) GetSamples(numSamples int) ([]Sample, error) {
 	if numSamples < 0 {
 		return nil, errors.New("numSamples cannot be negative")
