@@ -8,7 +8,9 @@ import (
 	"github.com/takurooo/wavgo/internal/riff"
 )
 
-// Writer outputs samples to a WAV file using the provided Format.
+// Writer provides functionality to create and write WAV audio files.
+// It uses the provided Format configuration to structure the output file
+// and supports writing audio samples with automatic header generation.
 type Writer struct {
 	f                   *os.File
 	bw                  *binio.Writer
@@ -20,12 +22,17 @@ type Writer struct {
 	dataChunkSizeOffset int64
 }
 
-// NewWriter returns a new Writer configured with the given Format.
+// NewWriter creates a new WAV file writer configured with the specified Format.
+// The format parameter defines the audio characteristics such as sample rate,
+// bit depth, and channel configuration. The writer must be opened with Open()
+// before writing samples.
 func NewWriter(format *Format) *Writer {
 	return &Writer{f: nil, bw: nil, format: format, headerWritten: false, numWrittenSamples: 0}
 }
 
-// Open creates the destination WAV file.
+// Open creates the destination WAV file at the specified path. This method
+// prepares the file for writing but does not write the WAV header yet.
+// The header is written automatically on the first call to WriteSamples().
 func (w *Writer) Open(filePath string) error {
 	f, err := os.Create(filePath)
 	if err != nil {
@@ -36,7 +43,10 @@ func (w *Writer) Open(filePath string) error {
 	return nil
 }
 
-// Close finalizes the WAV file, writing sizes and closing the file handle.
+// Close finalizes the WAV file by updating the RIFF and data chunk sizes
+// in the header, syncing the file to disk, and closing the file handle.
+// This method must be called to ensure the WAV file is properly formatted
+// and all data is written to disk.
 func (w *Writer) Close() error {
 	dataChunkSize := w.numWrittenSamples * uint32(w.format.BlockAlign)
 	riffChunkSize := dataChunkSize + w.headerSize - 8
@@ -86,8 +96,11 @@ func (w *Writer) writeHeader() error {
 	return nil
 }
 
-// WriteSamples writes the provided samples to the file, writing the header on
-// the first call.
+// WriteSamples writes the provided audio samples to the WAV file. On the first
+// call, this method automatically writes the WAV header before writing sample data.
+// Each Sample in the slice should contain data for all channels defined in the Format.
+// The method handles the conversion of sample data to the appropriate bit depth
+// and byte order as specified in the format configuration.
 func (w *Writer) WriteSamples(samples []Sample) error {
 	if !w.headerWritten {
 		err := w.writeHeader()
