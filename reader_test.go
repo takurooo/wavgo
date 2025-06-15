@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/takurooo/wavgo/internal/riff"
 )
 
 func TestReader(t *testing.T) {
@@ -76,4 +77,149 @@ func TestReaderGetSamplesValidation(t *testing.T) {
 	samples, err = r.GetSamples(int(r.GetNumSamples()) + 1)
 	require.Nil(t, samples)
 	require.EqualError(t, err, "requested samples exceed remaining samples")
+}
+
+func TestReaderOpenFileError(t *testing.T) {
+	r := NewReader()
+	err := r.Open("non/existent/file.wav")
+	require.Error(t, err)
+}
+
+func TestReaderLoadBeforeOpen(t *testing.T) {
+	r := NewReader()
+	err := r.Load()
+	require.Error(t, err)
+}
+
+func TestReaderCloseWithoutOpen(t *testing.T) {
+	r := NewReader()
+	err := r.Close()
+	require.NoError(t, err) // Should not error when no file is open
+}
+
+func TestReaderGetSamplesBeforeLoad(t *testing.T) {
+	r := NewReader()
+	err := r.Open("testdata/read_test.wav")
+	require.NoError(t, err)
+	defer r.Close()
+
+	// Try to get samples before loading
+	samples, err := r.GetSamples(1)
+	require.Nil(t, samples)
+	require.Error(t, err) // Should error because br is nil
+}
+
+func TestReaderFormatValidation(t *testing.T) {
+	// Create a mock WAV file with invalid format fields
+	testCases := []struct {
+		name        string
+		setupFormat func() []byte
+		expectedErr string
+	}{
+		{
+			name: "zero channels",
+			setupFormat: func() []byte {
+				return []byte{
+					0x01, 0x00, // AudioFormat = 1
+					0x00, 0x00, // NumChannels = 0
+					0x44, 0xAC, 0x00, 0x00, // SampleRate = 44100
+					0x88, 0x58, 0x01, 0x00, // ByteRate
+					0x02, 0x00, // BlockAlign = 2
+					0x10, 0x00, // BitsPerSample = 16
+				}
+			},
+			expectedErr: "invalid NumChannels: must be greater than 0",
+		},
+		{
+			name: "zero sample rate",
+			setupFormat: func() []byte {
+				return []byte{
+					0x01, 0x00, // AudioFormat = 1
+					0x02, 0x00, // NumChannels = 2
+					0x00, 0x00, 0x00, 0x00, // SampleRate = 0
+					0x88, 0x58, 0x01, 0x00, // ByteRate
+					0x02, 0x00, // BlockAlign = 2
+					0x10, 0x00, // BitsPerSample = 16
+				}
+			},
+			expectedErr: "invalid SampleRate: must be greater than 0",
+		},
+		{
+			name: "zero block align",
+			setupFormat: func() []byte {
+				return []byte{
+					0x01, 0x00, // AudioFormat = 1
+					0x02, 0x00, // NumChannels = 2
+					0x44, 0xAC, 0x00, 0x00, // SampleRate = 44100
+					0x88, 0x58, 0x01, 0x00, // ByteRate
+					0x00, 0x00, // BlockAlign = 0
+					0x10, 0x00, // BitsPerSample = 16
+				}
+			},
+			expectedErr: "invalid BlockAlign: must be greater than 0",
+		},
+		{
+			name: "zero bits per sample",
+			setupFormat: func() []byte {
+				return []byte{
+					0x01, 0x00, // AudioFormat = 1
+					0x02, 0x00, // NumChannels = 2
+					0x44, 0xAC, 0x00, 0x00, // SampleRate = 44100
+					0x88, 0x58, 0x01, 0x00, // ByteRate
+					0x04, 0x00, // BlockAlign = 4
+					0x00, 0x00, // BitsPerSample = 0
+				}
+			},
+			expectedErr: "invalid BitsPerSample: must be greater than 0",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a mock RIFF chunk with invalid format
+			mockChunk := &riff.Chunk{
+				ID:   "fmt ",
+				Size: 16,
+				Data: tc.setupFormat(),
+			}
+
+			_, err := parseFormatChunkData(mockChunk)
+			require.Error(t, err)
+			require.EqualError(t, err, tc.expectedErr)
+		})
+	}
+}
+
+func TestReaderGetNumSamplesAndLeft(t *testing.T) {
+	r := NewReader()
+	err := r.Open("testdata/read_test.wav")
+	require.NoError(t, err)
+	defer r.Close()
+
+	err = r.Load()
+	require.NoError(t, err)
+
+	// Check initial counts
+	totalSamples := r.GetNumSamples()
+	samplesLeft := r.GetNumSamplesLeft()
+	require.Equal(t, totalSamples, samplesLeft)
+	require.Equal(t, uint32(2), totalSamples)
+
+	// Read one sample
+	samples, err := r.GetSamples(1)
+	require.NoError(t, err)
+	require.Len(t, samples, 1)
+	
+	// Check counts after reading
+	require.Equal(t, uint32(2), r.GetNumSamples()) // Total should not change
+	require.Equal(t, uint32(1), r.GetNumSamplesLeft()) // Left should decrease
+
+	// Read remaining sample
+	samples, err = r.GetSamples(1)
+	require.NoError(t, err)
+	require.Len(t, samples, 1)
+	
+	// Check final counts
+	require.Equal(t, uint32(2), r.GetNumSamples())
+	require.Equal(t, uint32(0), r.GetNumSamplesLeft())
 }
