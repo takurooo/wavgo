@@ -206,16 +206,16 @@ func TestReaderGetNumSamplesAndLeft(t *testing.T) {
 	samples, err := r.GetSamples(1)
 	require.NoError(t, err)
 	require.Len(t, samples, 1)
-	
+
 	// Check counts after reading
-	require.Equal(t, uint32(2), r.GetNumSamples()) // Total should not change
+	require.Equal(t, uint32(2), r.GetNumSamples())     // Total should not change
 	require.Equal(t, uint32(1), r.GetNumSamplesLeft()) // Left should decrease
 
 	// Read remaining sample
 	samples, err = r.GetSamples(1)
 	require.NoError(t, err)
 	require.Len(t, samples, 1)
-	
+
 	// Check final counts
 	require.Equal(t, uint32(2), r.GetNumSamples())
 	require.Equal(t, uint32(0), r.GetNumSamplesLeft())

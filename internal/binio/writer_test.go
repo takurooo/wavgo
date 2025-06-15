@@ -11,11 +11,11 @@ import (
 
 func TestWriter(t *testing.T) {
 	expected := []byte{
-		0x01,                   // uint8: 1
-		0x02, 0x03,             // uint16 LE: 770
-		0x04, 0x05, 0x06,       // uint24 LE: 395268
+		0x01,       // uint8: 1
+		0x02, 0x03, // uint16 LE: 770
+		0x04, 0x05, 0x06, // uint24 LE: 395268
 		0x07, 0x08, 0x09, 0x0A, // uint32 LE: 168496135
-		'T', 'E', 'S', 'T',     // string: "TEST"
+		'T', 'E', 'S', 'T', // string: "TEST"
 	}
 
 	t.Run("WriteU8", func(t *testing.T) {
@@ -109,8 +109,8 @@ func TestWriterBigEndian(t *testing.T) {
 		require.NoError(t, writer.Err())
 
 		expected := []byte{
-			0x01, 0x02,             // uint16 BE: 258
-			0x03, 0x04, 0x05,       // uint24 BE: 197637
+			0x01, 0x02, // uint16 BE: 258
+			0x03, 0x04, 0x05, // uint24 BE: 197637
 			0x06, 0x07, 0x08, 0x09, // uint32 BE: 101124105
 		}
 		require.Equal(t, expected, buf.Bytes())
@@ -260,7 +260,7 @@ func (s *seekableBuffer) Write(p []byte) (n int, err error) {
 		copy(newData, s.data)
 		s.data = newData
 	}
-	
+
 	// Write data at current offset
 	copy(s.data[s.offset:], p)
 	s.offset += int64(len(p))
@@ -279,11 +279,11 @@ func (s *seekableBuffer) Seek(offset int64, whence int) (int64, error) {
 	default:
 		return 0, errors.New("invalid whence")
 	}
-	
+
 	if newOffset < 0 {
 		return 0, errors.New("negative seek position")
 	}
-	
+
 	s.offset = newOffset
 	return newOffset, nil
 }

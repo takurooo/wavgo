@@ -36,8 +36,8 @@ func TestReader(t *testing.T) {
 
 	t.Run("ReadU24_LittleEndian", func(t *testing.T) {
 		reader := NewReader(bytes.NewReader(data))
-		reader.ReadU8()                              // Skip first byte
-		reader.ReadU16(binary.LittleEndian)          // Skip next 2 bytes
+		reader.ReadU8()                     // Skip first byte
+		reader.ReadU16(binary.LittleEndian) // Skip next 2 bytes
 		u24 := reader.ReadU24(binary.LittleEndian)
 		require.NoError(t, reader.Err())
 		require.Equal(t, uint32(0x060504), u24)
@@ -45,9 +45,9 @@ func TestReader(t *testing.T) {
 
 	t.Run("ReadU32_LittleEndian", func(t *testing.T) {
 		reader := NewReader(bytes.NewReader(data))
-		reader.ReadU8()                              // Skip first byte
-		reader.ReadU16(binary.LittleEndian)          // Skip next 2 bytes
-		reader.ReadU24(binary.LittleEndian)          // Skip next 3 bytes
+		reader.ReadU8()                     // Skip first byte
+		reader.ReadU16(binary.LittleEndian) // Skip next 2 bytes
+		reader.ReadU24(binary.LittleEndian) // Skip next 3 bytes
 		u32 := reader.ReadU32(binary.LittleEndian)
 		require.NoError(t, reader.Err())
 		require.Equal(t, uint32(0x0A090807), u32)
@@ -55,10 +55,10 @@ func TestReader(t *testing.T) {
 
 	t.Run("ReadS32", func(t *testing.T) {
 		reader := NewReader(bytes.NewReader(data))
-		reader.ReadU8()                              // Skip first byte
-		reader.ReadU16(binary.LittleEndian)          // Skip next 2 bytes
-		reader.ReadU24(binary.LittleEndian)          // Skip next 3 bytes
-		reader.ReadU32(binary.LittleEndian)          // Skip next 4 bytes
+		reader.ReadU8()                     // Skip first byte
+		reader.ReadU16(binary.LittleEndian) // Skip next 2 bytes
+		reader.ReadU24(binary.LittleEndian) // Skip next 3 bytes
+		reader.ReadU32(binary.LittleEndian) // Skip next 4 bytes
 		s32 := reader.ReadS32(binary.LittleEndian)
 		require.NoError(t, reader.Err())
 		require.Equal(t, "TEST", s32)
@@ -89,8 +89,8 @@ func TestReaderBigEndian(t *testing.T) {
 
 	t.Run("ReadU32_BigEndian", func(t *testing.T) {
 		reader := NewReader(bytes.NewReader(data))
-		reader.ReadU16(binary.BigEndian)  // Skip first 2 bytes
-		reader.ReadU24(binary.BigEndian)  // Skip next 3 bytes
+		reader.ReadU16(binary.BigEndian) // Skip first 2 bytes
+		reader.ReadU24(binary.BigEndian) // Skip next 3 bytes
 		u32 := reader.ReadU32(binary.BigEndian)
 		require.NoError(t, reader.Err())
 		require.Equal(t, uint32(0x06070809), u32)
