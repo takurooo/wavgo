@@ -146,7 +146,7 @@ func parseFormatChunkData(fmtChunk *riff.Chunk) (Format, error) {
 	if br.Err() != nil {
 		return Format{}, br.Err()
 	}
-	
+
 	// Validate format fields
 	if format.NumChannels == 0 {
 		return Format{}, errors.New("invalid NumChannels: must be greater than 0")
@@ -160,6 +160,6 @@ func parseFormatChunkData(fmtChunk *riff.Chunk) (Format, error) {
 	if format.BitsPerSample == 0 {
 		return Format{}, errors.New("invalid BitsPerSample: must be greater than 0")
 	}
-	
+
 	return format, nil
 }

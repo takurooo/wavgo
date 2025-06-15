@@ -38,12 +38,12 @@ func ReadRIFFChunk(r io.ReaderAt) (*riffChunk, error) {
 		if breader.Err() != nil {
 			return nil, breader.Err()
 		}
-		
+
 		chunkOverhead := uint32(8) // 4 bytes ID + 4 bytes size
 		if subChunkSize+chunkOverhead > numBytesLeft {
 			return nil, errors.New("invalid chunk size: exceeds remaining bytes")
 		}
-		
+
 		riffChunk.AddSubChunk(subChunkID, subChunkSize, chunkData)
 		numBytesLeft -= subChunkSize + chunkOverhead
 	}
