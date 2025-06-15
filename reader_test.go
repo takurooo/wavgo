@@ -57,3 +57,23 @@ func TestReaderUnsupportedBitsPerSample(t *testing.T) {
 	require.Nil(t, samples)
 	require.True(t, errors.Is(err, ErrUnsupportedBitsPerSample))
 }
+
+func TestReaderGetSamplesValidation(t *testing.T) {
+	r := NewReader()
+	err := r.Open("testdata/read_test.wav")
+	require.NoError(t, err)
+	defer r.Close()
+
+	err = r.Load()
+	require.NoError(t, err)
+
+	// Test negative numSamples
+	samples, err := r.GetSamples(-1)
+	require.Nil(t, samples)
+	require.EqualError(t, err, "numSamples cannot be negative")
+
+	// Test requesting more samples than available
+	samples, err = r.GetSamples(int(r.GetNumSamples()) + 1)
+	require.Nil(t, samples)
+	require.EqualError(t, err, "requested samples exceed remaining samples")
+}
